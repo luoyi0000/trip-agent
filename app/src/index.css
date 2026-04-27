@@ -1,0 +1,222 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary: #a8d0f0;
+    --bg-gradient-start: #b8d8f4;
+    --bg-gradient-end: #c8e0f8;
+    --surface: #ffffff;
+    --surface-warm: #fff8f0;
+    --surface-pink: #ffe4f0;
+    --surface-yellow: #fff8dc;
+    --surface-mint: #e0f8f0;
+    --surface-lavender: #e8e4ff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #555577;
+    --border-color: #1a1a2e;
+    --accent-pink: #ff69b4;
+    --accent-yellow: #ffd93d;
+    --accent-mint: #6bcb9e;
+    --accent-lavender: #a78bfa;
+    --accent-coral: #ff8a80;
+    --accent-sky: #64b5f6;
+  }
+}
+
+@layer base {
+  * {
+    font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  }
+  body {
+    background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    min-height: 100vh;
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  /* Neo-Brutalism Card Style */
+  .neo-card {
+    @apply bg-white rounded-2xl;
+    border: 3px solid var(--border-color);
+    box-shadow: 5px 5px 0px 0px var(--border-color);
+    transition: all 0.2s ease;
+  }
+  .neo-card:hover {
+    box-shadow: 7px 7px 0px 0px var(--border-color);
+    transform: translate(-1px, -1px);
+  }
+
+  /* Neo-Brutalism Card Small (thinner border) */
+  .neo-card-sm {
+    @apply bg-white rounded-xl;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+    transition: all 0.2s ease;
+  }
+  .neo-card-sm:hover {
+    box-shadow: 5px 5px 0px 0px var(--border-color);
+    transform: translate(-1px, -1px);
+  }
+
+  /* Neo-Brutalism Button */
+  .neo-btn {
+    @apply font-bold rounded-full px-6 py-3 text-sm;
+    border: 3px solid var(--border-color);
+    box-shadow: 4px 4px 0px 0px var(--border-color);
+    transition: all 0.15s ease;
+  }
+  .neo-btn:hover {
+    box-shadow: 6px 6px 0px 0px var(--border-color);
+    transform: translate(-1px, -1px);
+  }
+  .neo-btn:active {
+    box-shadow: 2px 2px 0px 0px var(--border-color);
+    transform: translate(1px, 1px);
+  }
+
+  /* Neo-Brutalism Input */
+  .neo-input {
+    @apply rounded-xl px-4 py-3 text-sm outline-none;
+    border: 2.5px solid var(--border-color);
+    background: #fafbfc;
+    transition: all 0.2s ease;
+  }
+  .neo-input:focus {
+    background: #fff;
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+  }
+  .neo-input::placeholder {
+    color: #aab;
+  }
+
+  /* Neo-Brutalism Select */
+  .neo-select {
+    @apply rounded-xl px-4 py-3 text-sm outline-none appearance-none;
+    border: 2.5px solid var(--border-color);
+    background: #fafbfc;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%231a1a2e' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.7rem center;
+    background-repeat: no-repeat;
+    background-size: 1.2em;
+    padding-right: 2.5rem;
+  }
+
+  /* Neo-Brutalism Tag/Pill */
+  .neo-tag {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 2px 2px 0px 0px var(--border-color);
+  }
+
+  /* Neo-Brutalism Section Header */
+  .neo-section-header {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-extrabold text-white;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+  }
+
+  /* Neo-Brutalism Accordion Item */
+  .neo-accordion {
+    @apply bg-white rounded-xl;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+    transition: all 0.2s ease;
+  }
+  .neo-accordion-header {
+    @apply flex items-center justify-between px-4 py-3 cursor-pointer;
+  }
+  .neo-accordion-content {
+    @apply px-4 pb-4;
+  }
+
+  /* Weather card */
+  .neo-weather-card {
+    @apply bg-white rounded-xl p-3 text-center;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+  }
+
+  /* Highlight text with colored bg */
+  .text-highlight-pink {
+    @apply inline px-1.5 py-0.5 rounded-lg font-extrabold;
+    background: var(--surface-pink);
+    border: 2.5px solid var(--border-color);
+  }
+  .text-highlight-yellow {
+    @apply inline px-1.5 py-0.5 rounded-lg font-extrabold;
+    background: var(--surface-yellow);
+    border: 2.5px solid var(--border-color);
+  }
+  .text-highlight-mint {
+    @apply inline px-1.5 py-0.5 rounded-lg font-extrabold;
+    background: var(--surface-mint);
+    border: 2.5px solid var(--border-color);
+  }
+  .text-highlight-lavender {
+    @apply inline px-1.5 py-0.5 rounded-lg font-extrabold;
+    background: var(--surface-lavender);
+    border: 2.5px solid var(--border-color);
+  }
+
+  /* Section title dot */
+  .section-dot {
+    @apply w-3 h-3 rounded-full;
+    border: 2.5px solid var(--border-color);
+  }
+
+  /* Timeline / Step */
+  .neo-step-dot {
+    @apply w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white flex-shrink-0;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 2px 2px 0px 0px var(--border-color);
+  }
+
+  /* Map placeholder */
+  .neo-map {
+    @apply rounded-xl overflow-hidden;
+    border: 2.5px solid var(--border-color);
+    box-shadow: 3px 3px 0px 0px var(--border-color);
+  }
+
+  /* Scrollbar hidden */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes ringProgress {
+  from { stroke-dashoffset: 283; }
+  to { stroke-dashoffset: var(--target-offset, 79); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 2s ease-in-out infinite; }
+.animate-pop-in { animation: popIn 0.5s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.5s ease-out forwards; }

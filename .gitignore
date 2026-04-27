@@ -1,0 +1,13 @@
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SQLite database (runtime generated)
+backend/app/data/*.db
+
+# Logs
+*.log
