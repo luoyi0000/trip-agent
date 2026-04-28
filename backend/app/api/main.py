@@ -1,9 +1,21 @@
 """FastAPI主应用"""
 
+import sys
+import os
+
+# 修复 Windows 终端 GBK 编码问题（支持 emoji 等非 ASCII 字符）
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from ..config import get_settings, validate_config, print_config
-from .routes import trip, poi, map as map_routes, chat, favorites, auth
+from .routes import trip, poi, map as map_routes, chat, favorites, auth, memory
 
 # 获取配置
 settings = get_settings()
@@ -36,6 +48,7 @@ app.include_router(map_routes.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
 app.include_router(favorites.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
+app.include_router(memory.router, prefix="/api")
 
 
 @app.on_event("startup")

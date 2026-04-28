@@ -96,6 +96,9 @@ async def plan_trip(request: TripRequest, user_id: str = Depends(require_user_id
             status="pending",
         )
 
+        # 将用户 ID 注入请求，供记忆模块使用
+        request.user_id = _user_id
+
         # 启动后台任务
         asyncio.create_task(_background_plan_task(task_id, request, _user_id))
 

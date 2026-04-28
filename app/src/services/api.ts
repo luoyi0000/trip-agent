@@ -409,12 +409,81 @@ export interface ChatMessage {
 }
 
 export const chatAPI = {
-  /** AI 对话（支持 session） */
+  /** AI 对话（非流式，向后兼容） */
   async send(request: ChatRequest): Promise<ChatResponse> {
     return fetchJSON(`${API_BASE_URL}/api/chat/`, {
       method: 'POST',
       body: JSON.stringify(request),
     })
+  },
+
+  /** AI 对话（流式，推荐）
+   *
+   * 返回 { stream, promise }
+   * - stream: AsyncGenerator<{ type: 'token', token: string } | { type: 'session', session_id: number } | { type: 'done', session_id?: number } | { type: 'error', message: string }>
+   * - promise: 请求完成的 Promise
+   */
+  sendStream(request: ChatRequest): {
+    stream: AsyncGenerator<any, void, unknown>
+    promise: Promise<Response>
+  } {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'x-user-id': getUserId(),
+    }
+    const token = getAuthToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const abortController = new AbortController()
+    const promise = fetch(`${API_BASE_URL}/api/chat/stream`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(request),
+      signal: abortController.signal,
+    })
+
+    async function* streamEvents(): AsyncGenerator<any, void, unknown> {
+      const resp = await promise
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}: ${await resp.text().catch(() => 'Unknown error')}`)
+      }
+
+      const reader = resp.body?.getReader()
+      if (!reader) throw new Error('Response body is not readable')
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''  // 保留最后一个不完整的行
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (trimmed.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(trimmed.slice(6))
+                yield data
+                if (data.type === 'done') return
+              } catch {
+                // 跳过解析失败的行
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock()
+      }
+    }
+
+    return { stream: streamEvents(), promise }
   },
 
   /** 查询历史会话列表 */

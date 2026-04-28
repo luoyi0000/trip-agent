@@ -101,6 +101,25 @@ def init_db() -> None:
             "CREATE INDEX IF NOT EXISTS idx_chat_msg_session ON chat_messages(session_id, created_at)"
         )
 
+        # 用户偏好表
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_preferences (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id     TEXT NOT NULL,
+                key         TEXT NOT NULL,
+                value       TEXT NOT NULL,
+                category    TEXT DEFAULT 'general',
+                created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, key)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_pref_user ON user_preferences(user_id, category)"
+        )
+
         # 用户表
         conn.execute(
             """
@@ -507,6 +526,75 @@ def migrate_anonymous_data(from_anon_id: str, to_user_id: str) -> int:
 
         conn.commit()
         return total
+    finally:
+        conn.close()
+
+
+# ============ USER PREFERENCES CRUD ============
+
+
+def set_user_preference(user_id: str, key: str, value: str, category: str = "general") -> None:
+    """设置用户偏好（插入或替换）"""
+    conn = get_conn()
+    try:
+        conn.execute(
+            """
+            INSERT INTO user_preferences (user_id, key, value, category, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(user_id, key)
+            DO UPDATE SET value = excluded.value,
+                          category = excluded.category,
+                          updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, key, value, category),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_user_preferences(user_id: str) -> List[Dict[str, Any]]:
+    """获取用户所有偏好"""
+    conn = get_conn()
+    try:
+        rows = conn.execute(
+            """
+            SELECT key, value, category, created_at, updated_at
+            FROM user_preferences
+            WHERE user_id = ?
+            ORDER BY category, key
+            """,
+            (user_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def delete_user_preference(user_id: str, key: str) -> bool:
+    """删除用户单条偏好，返回是否成功"""
+    conn = get_conn()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM user_preferences WHERE user_id = ? AND key = ?",
+            (user_id, key),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
+def clear_user_preferences(user_id: str) -> int:
+    """清空用户所有偏好，返回删除条数"""
+    conn = get_conn()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM user_preferences WHERE user_id = ?",
+            (user_id,),
+        )
+        conn.commit()
+        return cursor.rowcount
     finally:
         conn.close()
 
