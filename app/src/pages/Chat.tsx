@@ -135,43 +135,65 @@ export default function Chat() {
     setLoading(true)
     setError('')
 
+    // 先加一个空白 AI 消息占位
+    const aiMsgId = (Date.now() + 1).toString()
+    const aiPlaceholder: Message = {
+      id: aiMsgId,
+      role: 'ai',
+      text: '',
+      time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+    }
+    setMessages(prev => [...prev, aiPlaceholder])
+
     try {
-      // 构建历史记录（最近6轮）
+      // 构建历史记录
       const history = messages.slice(-12).map(m => ({
         role: m.role,
         text: m.text,
       }))
 
-      const resp = await chatAPI.send({
+      const { stream } = chatAPI.sendStream({
         message: text,
         history,
         context: context || undefined,
         session_id: sessionId,
       })
 
-      // 保存/更新 sessionId
-      if (resp.session_id && resp.session_id !== sessionId) {
-        setSessionId(resp.session_id)
-        // 刷新会话列表
-        loadSessions()
+      let fullText = ''
+      let newSessionId = sessionId
+
+      for await (const event of stream) {
+        if (event.type === 'token') {
+          fullText += event.token
+          // 实时更新占位 AI 消息
+          setMessages(prev =>
+            prev.map(m => (m.id === aiMsgId ? { ...m, text: fullText } : m))
+          )
+        } else if (event.type === 'session') {
+          newSessionId = event.session_id
+          if (newSessionId !== sessionId) {
+            setSessionId(newSessionId)
+            loadSessions()
+          }
+        } else if (event.type === 'error') {
+          setError(event.message || 'AI 服务暂时不可用')
+        }
+        // done 事件：结束流
       }
 
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        text: resp.reply || '抱歉，我没有理解您的问题。',
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      // 如果流结束但没内容，回退兜底
+      if (!fullText) {
+        const fallback = `收到你的问题！「${text}」\n\n💡 我是智能旅行助手，可以帮你：\n• 详细分析具体景点\n• 推荐周边美食\n• 优化行程安排\n• 提供实时天气提醒\n\n（当前AI服务暂时不可用，请稍后重试）`
+        setMessages(prev =>
+          prev.map(m => (m.id === aiMsgId ? { ...m, text: fallback } : m))
+        )
       }
-      setMessages(prev => [...prev, aiMsg])
     } catch (e: any) {
       setError(e.message || '网络错误，请稍后重试')
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'ai',
-        text: `收到你的问题！「${text}」\n\n💡 我是智能旅行助手，可以帮你：\n• 详细分析具体景点\n• 推荐周边美食\n• 优化行程安排\n• 提供实时天气提醒\n\n（当前AI服务暂时不可用，请稍后重试）`,
-        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
-      }
-      setMessages(prev => [...prev, aiMsg])
+      const fallback = `收到你的问题！「${text}」\n\n💡 我是智能旅行助手，可以帮你：\n• 详细分析具体景点\n• 推荐周边美食\n• 优化行程安排\n• 提供实时天气提醒\n\n（当前AI服务暂时不可用，请稍后重试）`
+      setMessages(prev =>
+        prev.map(m => (m.id === aiMsgId ? { ...m, text: fallback } : m))
+      )
     } finally {
       setLoading(false)
     }
@@ -268,7 +290,7 @@ export default function Chat() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={startNewChat}
-                  className="neo-btn bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf] text-white flex items-center gap-2 py-2.5 px-3 text-xs mb-3 justify-center"
+                  className="neo-btn bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf] text-white flex items-center gap-2 py-2.5 px-3 text-xs mb-3 justify-center border-[2.5px] border-[#1a1a2e]"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   新建对话
@@ -290,10 +312,10 @@ export default function Chat() {
                       <div key={s.id} className="group flex items-center gap-1">
                         <button
                           onClick={() => loadSessionMessages(s.id)}
-                          className={`flex-1 flex items-center gap-2 px-2 py-2 rounded-lg text-[10px] font-bold transition-all text-left ${
+                          className={`flex-1 flex items-center gap-2 px-2 py-2 rounded-full text-[10px] font-bold transition-all text-left ${
                             sessionId === s.id
-                              ? 'bg-[#ffe4f0] text-[#ff69b4] border-[1.5px] border-[#1a1a2e]'
-                              : 'text-[#778] hover:bg-[#f5f5fa] border-[1.5px] border-transparent'
+                              ? 'bg-[#ffe4f0] text-[#ff69b4] border-[2.5px] border-[#1a1a2e]'
+                              : 'text-[#778] hover:bg-[#f5f5fa]'
                           }`}
                         >
                           <MessageSquare className="w-3 h-3 flex-shrink-0" />

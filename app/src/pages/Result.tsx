@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router'
 import { motion } from 'framer-motion'
 import {
@@ -82,7 +82,7 @@ function AttractionImage({ name, imageUrl, keyword, city }: { name: string; imag
       if (!cancelled && res.data?.photo_url) {
         setUrl(res.data.photo_url)
       }
-    }).catch(() => {})
+    }).catch(() => { })
     return () => { cancelled = true }
   }, [name, imageUrl, keyword, city])
 
@@ -319,6 +319,17 @@ export default function Result() {
   const [pollStatus, setPollStatus] = useState('')
   const [error, setError] = useState('')
 
+  const progressValue = useMemo(() => {
+    const status = pollStatus || ''
+    if (status.includes('排队')) return 5
+    if (status.includes('景点')) return 30
+    if (status.includes('天气')) return 50
+    if (status.includes('酒店')) return 70
+    if (status.includes('整合') || status.includes('规划') || status.includes('生成')) return 85
+    if (status.includes('完成') || status.includes('成功')) return 100
+    return 10
+  }, [pollStatus])
+
   // History state
   const [historyList, setHistoryList] = useState<HistoryItem[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
@@ -539,11 +550,10 @@ export default function Result() {
               <button
                 key={item.label}
                 onClick={() => navigate(item.path)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  item.path === '/result' || (item.path.startsWith('/result') && location.pathname === '/result')
-                    ? 'bg-[#ffe4f0] text-[#ff69b4]'
-                    : 'text-[#778] hover:bg-[#f5f5fa]'
-                }`}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${item.path === '/result' || (item.path.startsWith('/result') && location.pathname === '/result')
+                  ? 'bg-[#ffe4f0] text-[#ff69b4]'
+                  : 'text-[#778] hover:bg-[#f5f5fa]'
+                  }`}
               >
                 {item.label}
               </button>
@@ -631,13 +641,12 @@ export default function Result() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-[1.5px] ${
-                          item.status === 'completed'
-                            ? 'bg-[#e0f8f0] border-[#1a1a2e] text-[#6bcb9e]'
-                            : item.status === 'failed'
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border-[1.5px] ${item.status === 'completed'
+                          ? 'bg-[#e0f8f0] border-[#1a1a2e] text-[#6bcb9e]'
+                          : item.status === 'failed'
                             ? 'bg-[#ffe4f0] border-[#1a1a2e] text-[#ff8a80]'
                             : 'bg-[#fff8dc] border-[#1a1a2e] text-[#f5a623]'
-                        }`}>
+                          }`}>
                           {item.status === 'completed' ? '已完成' : item.status === 'failed' ? '失败' : '处理中'}
                         </span>
                         <motion.button
@@ -659,7 +668,7 @@ export default function Result() {
           <div className="mt-10 text-center pb-6">
             <div className="inline-flex items-center gap-2 neo-card px-4 py-2">
               <Heart className="w-3.5 h-3.5 text-[#ff8a80]" />
-              <span className="text-[11px] font-bold text-[#99a]">智能旅行助手 &copy; 2025</span>
+              <span className="text-[11px] font-bold text-[#99a]">智能旅行助手 &copy; 2026</span>
             </div>
           </div>
         </div>
@@ -678,15 +687,15 @@ export default function Result() {
   // 构建地图标记数据
   const mapMarkers = plan?.days
     ? plan.days.flatMap((day) =>
-        (day.attractions || []).map((spot) => ({
-          name: spot.name,
-          longitude: spot.location?.longitude ?? 0,
-          latitude: spot.location?.latitude ?? 0,
-          address: spot.address,
-          description: spot.description,
-          dayIndex: day.day_index,
-        }))
-      )
+      (day.attractions || []).map((spot) => ({
+        name: spot.name,
+        longitude: spot.location?.longitude ?? 0,
+        latitude: spot.location?.latitude ?? 0,
+        address: spot.address,
+        description: spot.description,
+        dayIndex: day.day_index,
+      }))
+    )
     : []
 
   // Loading state
@@ -703,7 +712,29 @@ export default function Result() {
           </motion.div>
           <h2 className="text-lg font-black text-[#1a1a2e] mb-2">AI 正在规划你的旅行...</h2>
           <p className="text-sm text-[#778] font-semibold max-w-xs mx-auto">{pollStatus || '正在调用多智能体系统搜索景点、天气和酒店信息...'}</p>
-          <div className="mt-6 flex justify-center gap-2">
+          <div className="mt-6 w-64 mx-auto">
+            <div className="relative">
+              <div className="h-3 rounded-full border-[2px] border-[#1a1a2e] bg-white overflow-hidden" style={{ boxShadow: '3px 3px 0px 0px #1a1a2e' }}>
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-[#a78bfa] to-[#2dd4bf]"
+                  animate={{ width: `${progressValue}%` }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+              </div>
+              <div
+                className="absolute -top-1 transition-all duration-500 ease-out"
+                style={{ left: `calc(${progressValue}% - 8px)` }}
+              >
+                <motion.div
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="w-4 h-4 rounded-full bg-gradient-to-br from-[#a78bfa] to-[#2dd4bf] border-[2px] border-[#1a1a2e]"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] font-bold text-[#99a] mt-2">{progressValue}%</p>
+          </div>
+          <div className="mt-4 flex justify-center gap-2">
             {[0, 1, 2].map(i => (
               <motion.div
                 key={i}
@@ -870,17 +901,15 @@ export default function Result() {
                       <button
                         key={item.task_id}
                         onClick={() => loadHistoryDetail(item.task_id)}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all text-left ${
-                          isActive
-                            ? 'bg-[#ffe4f0] text-[#ff69b4] border-[1.5px] border-[#1a1a2e]'
-                            : 'text-[#778] hover:bg-[#f5f5fa] border-[1.5px] border-transparent'
-                        }`}
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all text-left ${isActive
+                          ? 'bg-[#ffe4f0] text-[#ff69b4] border-[1.5px] border-[#1a1a2e]'
+                          : 'text-[#778] hover:bg-[#f5f5fa] border-[1.5px] border-transparent'
+                          }`}
                       >
                         <MapPin className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate flex-1">{item.city} · {item.travel_days}天</span>
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          item.status === 'completed' ? 'bg-[#6bcb9e]' : 'bg-[#f5a623]'
-                        }`} />
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.status === 'completed' ? 'bg-[#6bcb9e]' : 'bg-[#f5a623]'
+                          }`} />
                       </button>
                     )
                   })
@@ -1047,7 +1076,7 @@ export default function Result() {
         <div className="mt-10 text-center pb-6">
           <div className="inline-flex items-center gap-2 neo-card px-4 py-2">
             <Heart className="w-3.5 h-3.5 text-[#ff8a80]" />
-            <span className="text-[11px] font-bold text-[#99a]">智能旅行助手 &copy; 2025 基于 HelloAgents 框架</span>
+            <span className="text-[11px] font-bold text-[#99a]">智能旅行助手 &copy; 2026</span>
           </div>
         </div>
       </div>
