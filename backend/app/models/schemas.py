@@ -12,6 +12,7 @@ class TripRequest(BaseModel):
     city: str = Field(..., description="目的地城市", example="北京")
     start_date: str = Field(..., description="开始日期 YYYY-MM-DD", example="2025-06-01")
     end_date: str = Field(..., description="结束日期 YYYY-MM-DD", example="2025-06-03")
+    user_id: str = Field(default="", description="用户ID，用于注入记忆")
     travel_days: int = Field(..., description="旅行天数", ge=1, le=30, example=3)
     transportation: str = Field(..., description="交通方式", example="公共交通")
     accommodation: str = Field(..., description="住宿偏好", example="经济型酒店")
@@ -205,6 +206,7 @@ class TripPlanTaskResponse(BaseModel):
     message: str = Field(default="", description="消息")
     task_id: str = Field(..., description="任务ID")
     status: str = Field(default="processing", description="任务状态: processing/completed/failed")
+    user_id: str = Field(default="", description="用户ID")
 
 
 class TripPlanTaskStatus(BaseModel):
